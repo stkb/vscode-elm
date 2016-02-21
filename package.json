@@ -12,7 +12,7 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": "^0.10.1"
+    "vscode": "^0.10.6"
   },
   "categories": [
     "Languages",
@@ -148,7 +148,7 @@
   "devDependencies": {
     "rimraf": "^2.5.2",
     "typescript": "^1.6.2",
-    "vscode": "^0.10.7"
+    "vscode": "stkb/vscode-extension-vscode"
   },
   "dependencies": {
     "elm-oracle": "^0.2.0"
