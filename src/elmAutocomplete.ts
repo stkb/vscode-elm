@@ -17,26 +17,29 @@ export class ElmCompletionProvider implements vscode.CompletionItemProvider {
       document.lineAt(position).text.substr(0, position.character)
     let match: RegExpMatchArray
 
-    if (match = lineTextUpToCursor.match(/import\s+(\S*)/)) {
-      console.log('import-' + match[1]);
-    }    
-    
-    return oracle.GetOracleResults(document, position)
-      .then((result) => {
-        var r = result.map((v, i, arr) => {
-          var ci : vscode.CompletionItem = new vscode.CompletionItem(v.fullName);
-          ci.kind = 0;
-          ci.insertText = v.fullName;
-          ci.detail = v.signature;
-          ci.documentation = v.comment;
-          return ci;
-        });
-        return r;
-      });
+    if (match = lineTextUpToCursor.match(/^import\s+(\S*)$/)) {
+      getAvailableModulesToImport(document.fileName, match[1]);
+      return Promise.resolve([])
     }
+    else {
+      return oracle.GetOracleResults(document, position)
+        .then((result) => {
+          var r = result.map((v, i, arr) => {
+            var ci : vscode.CompletionItem = new vscode.CompletionItem(v.fullName);
+            ci.kind = 0;
+            ci.insertText = v.fullName;
+            ci.detail = v.signature;
+            ci.documentation = v.comment;
+            return ci;
+          });
+          return r;
+        });
+      }
+    }
+    
 }
 
-function getAvailableModulesToImport(fileName: string)
+function getAvailableModulesToImport(fileName: string, nameHint: string)
 {
   const packageDocFiles = getPackageDocFileNames(fileName);
   packageDocFiles
