@@ -1,6 +1,6 @@
 import { join } from 'path';
 import * as vscode from 'vscode';
-import { Position, Range } from 'vscode'
+import { CompletionItem, Position, Range } from 'vscode'
 
 import * as oracle from './elmOracle'
 import { detectProjectRoot } from './elmUtils'
@@ -17,15 +17,17 @@ export class ElmCompletionProvider implements vscode.CompletionItemProvider {
       document.lineAt(position).text.substr(0, position.character)
     let match: RegExpMatchArray
 
-    if (match = lineTextUpToCursor.match(/^import\s+(\S*)$/)) {
-      getAvailableModulesToImport(document.fileName, match[1]);
-      return Promise.resolve([])
+        
+    if (match = lineTextUpToCursor.match(/^import\s+\S*$/)) {
+      return Promise.resolve(
+        getAvailableModulesToImport(document.fileName)
+      );
     }
     else {
       return oracle.GetOracleResults(document, position)
         .then((result) => {
           var r = result.map((v, i, arr) => {
-            var ci : vscode.CompletionItem = new vscode.CompletionItem(v.fullName);
+            var ci : vscode.CompletionItem = new CompletionItem(v.fullName);
             ci.kind = 0;
             ci.insertText = v.fullName;
             ci.detail = v.signature;
@@ -39,12 +41,30 @@ export class ElmCompletionProvider implements vscode.CompletionItemProvider {
     
 }
 
-function getAvailableModulesToImport(fileName: string, nameHint: string)
+interface Info {
+  name: string;
+  comment: string;
+}
+
+interface ModuleInfo extends Info {
+  types: Info[]
+  values: Info[]
+}
+
+function getAvailableModulesToImport(fileName: string): CompletionItem[]
 {
   const packageDocFiles = getPackageDocFileNames(fileName);
-  packageDocFiles
+  return packageDocFiles
     .map(require)
-    .map(console.log)
+    .map((modules: any[]) => {
+      return modules.map(m => {
+        const item = new CompletionItem(m.name);
+        item.kind = vscode.CompletionItemKind.Module;
+        item.detail = m.comment;
+        return item;
+      })
+    })
+    .reduce((arr, acc) => acc.concat(arr), [] as CompletionItem[])
 }
 
 function getPackageDocFileNames(fileName: string): string[]
