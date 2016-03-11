@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import * as oracle from './elmOracle'
+import { getOracleResults } from './elmOracle'
 
 export class ElmHoverProvider implements vscode.HoverProvider {
   public provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Thenable<vscode.Hover> {
-    return oracle.GetOracleResults(document, position)
+    return getOracleResults(document, position)
       .then((result) => {
         if (result.length > 0) {
             let text = result[0].signature + '\n\n' + result[0].comment;

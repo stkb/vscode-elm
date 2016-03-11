@@ -3,7 +3,7 @@ import * as path from 'path';
 import {pluginPath, detectProjectRoot} from './elmUtils';
 import * as vscode from 'vscode';
 
-interface IOracleResult {
+export interface OracleResult {
   name: string;
   fullName: string;
   href: string;
@@ -11,14 +11,14 @@ interface IOracleResult {
   comment: string;
 }
 
-export function GetOracleResults(document: vscode.TextDocument, position: vscode.Position): Thenable<IOracleResult[]> {
+export function getOracleResults(document: vscode.TextDocument, position?: vscode.Position): Thenable<OracleResult[]> {
   return new Promise((resolve: Function, reject: Function) => {
       let p: cp.ChildProcess;
       let filename: string = document.fileName;
       let cwd = detectProjectRoot(document.fileName) || vscode.workspace.rootPath;
       let fn = path.relative(cwd, filename)
-      let wordAtPosition = document.getWordRangeAtPosition(position);
-      let currentWord: string = document.getText(wordAtPosition);
+      let currentWord = position ?
+        document.getText(document.getWordRangeAtPosition(position)) : '""';
       let oracle = pluginPath + path.sep + 'node_modules' + path.sep + 'elm-oracle' + path.sep + 'bin' + path.sep + 'elm-oracle \"' + fn + '\" ' + currentWord;
     
       p = cp.exec('node ' + oracle, { cwd: cwd }, (err: Error, stdout: Buffer, stderr: Buffer) => {
@@ -26,7 +26,7 @@ export function GetOracleResults(document: vscode.TextDocument, position: vscode
           if (err) {
             return resolve(null);
           }
-          let result: IOracleResult[] = JSON.parse(stdout.toString());
+          let result: OracleResult[] = JSON.parse(stdout.toString());
           resolve(result);
         } catch (e) {
           reject(e);
